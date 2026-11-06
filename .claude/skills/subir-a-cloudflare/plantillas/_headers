@@ -1,0 +1,11 @@
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: same-origin
+  Cache-Control: no-store
+
+# Archivos con la versión o la huella en el nombre: pueden quedar en caché del navegador.
+# (Quitar o ajustar si el proyecto no los tiene.)
+/assets/*
+  ! Cache-Control
+  Cache-Control: private, max-age=86400

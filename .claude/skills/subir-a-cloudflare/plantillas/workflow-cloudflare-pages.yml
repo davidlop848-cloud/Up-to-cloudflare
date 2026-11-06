@@ -1,0 +1,56 @@
+# Publica __NOMBRE__ en Cloudflare Pages al unir a main (cada push a main publica).
+# Los secretos CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID se cargan en GitHub → Settings → Secrets and variables →
+# Actions (nunca en el repo). Sin ellos, el job avisa «no se publica» y termina en verde.
+name: Publicar __NOMBRE__ en Cloudflare Pages
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  probar:
+    name: Pruebas y armado
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: __CARPETA__
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # Proyecto con package.json: dejar solo lo que exista (instalar, probar, armar).
+      - run: npm ci
+      - run: npm test --if-present
+      - run: npm run build --if-present
+
+  publicar:
+    name: Publicar en Cloudflare Pages
+    needs: [probar]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: produccion-pages
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: __CARPETA__
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - run: npm run build --if-present
+      - name: Publicar (solo si están los secretos)
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "Sin CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID: no se publica."
+            exit 0
+          fi
+          # Desde la carpeta con wrangler.toml y functions/: así Pages toma functions/ (sin ellas el sitio queda público).
+          npx --yes wrangler@4 pages deploy --branch main

@@ -1,0 +1,16 @@
+# Proyecto de Cloudflare Pages: __NOMBRE__
+# Desplegar SIEMPRE desde esta carpeta (la que tiene functions/): `npx --yes wrangler@4 pages deploy --branch main`
+name = "__NOMBRE__"
+pages_build_output_dir = "__SALIDA__"
+compatibility_date = "__FECHA__"
+
+[vars]
+# Datos de la aplicación de Cloudflare Access (NO son secretos; se versionan). Mientras estén vacíos,
+# functions/_middleware.js responde 500 «falta configurar»: el sitio queda cerrado, nunca abierto.
+#   ACCESS_TEAM_DOMAIN → dominio del equipo de Zero Trust, ej. "miequipo.cloudflareaccess.com"
+#   ACCESS_AUD         → «Application Audience (AUD) Tag» de la aplicación de Access
+ACCESS_TEAM_DOMAIN = ""
+ACCESS_AUD = ""
+
+# Secretos de la aplicación (NUNCA aquí ni en el repo): los carga la persona con
+#   npx --yes wrangler@4 pages secret put NOMBRE --project-name __NOMBRE__
